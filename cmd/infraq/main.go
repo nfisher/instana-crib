@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 	"os"
 
 	"github.com/antihax/optional"
-	"github.com/instana/instana-crib/pkg/instana/openapi"
+	"github.com/nfisher/instana-crib/pkg/instana/openapi"
 )
 
 func newConfiguration(apiURL string, isInsecure bool) (*openapi.Configuration, error) {
@@ -37,6 +38,10 @@ func newConfiguration(apiURL string, isInsecure bool) (*openapi.Configuration, e
 func main() {
 	var apiToken = os.Getenv("INSTANA_TOKEN")
 	var apiURL = os.Getenv("INSTANA_URL")
+	var queryString string
+
+	flag.StringVar(&queryString, "query", "entity.zone:us-east-2", "Infrastructure query to use as part of the metrics request")
+	flag.Parse()
 
 	log.Printf("API Key Set: %v\n", apiToken != "")
 	log.Printf("API URL:     %v\n", apiURL)
@@ -68,7 +73,7 @@ func main() {
 			TimeFrame: openapi.TimeFrame{
 				WindowSize: 360000,
 			},
-			Query:   "entity.zone:us-east-2",
+			Query:   queryString,
 			Plugin:  "host",
 			Metrics: []string{"cpu.user"},
 		}),

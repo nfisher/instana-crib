@@ -1,1 +1,1 @@
-package instana-crib
+package crib
