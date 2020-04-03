@@ -15,3 +15,6 @@ infraq
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# direnv.net
+.envrc
