@@ -2,7 +2,7 @@
 .PHONY: all
 all: infraq
 
-infraq:
+infraq: cmd/infraq/*.go
 	go build -v ./cmd/infraq
 
 .PHONY: clean
