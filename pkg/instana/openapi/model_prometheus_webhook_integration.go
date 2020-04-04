@@ -12,9 +12,7 @@ package openapi
 
 // PrometheusWebhookIntegration struct for PrometheusWebhookIntegration
 type PrometheusWebhookIntegration struct {
-	WebhookUrl string `json:"webhookUrl"`
-	Receiver   string `json:"receiver,omitempty"`
-	Id         string `json:"id"`
-	Kind       string `json:"kind"`
-	Name       string `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

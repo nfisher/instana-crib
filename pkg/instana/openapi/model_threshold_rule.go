@@ -12,12 +12,6 @@ package openapi
 
 // ThresholdRule struct for ThresholdRule
 type ThresholdRule struct {
-	MetricName        string  `json:"metricName"`
-	Rollup            int64   `json:"rollup,omitempty"`
-	Window            int64   `json:"window,omitempty"`
-	Aggregation       string  `json:"aggregation,omitempty"`
-	ConditionOperator string  `json:"conditionOperator"`
-	ConditionValue    float64 `json:"conditionValue,omitempty"`
 	// Values: `\"THRESHOLD\"`  `\"SYSTEM\"`  `\"ENTITY_VERIFICATION\"`
 	RuleType string `json:"ruleType"`
 	Severity int32  `json:"severity,omitempty"`

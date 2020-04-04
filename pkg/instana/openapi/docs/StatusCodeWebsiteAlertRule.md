@@ -4,8 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Operator** | **string** |  | 
-**Value** | **string** |  | 
 **AlertType** | **string** |  | 
 **MetricName** | **string** |  | 
 

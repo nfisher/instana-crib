@@ -13,5 +13,5 @@ package openapi
 // ServiceItem struct for ServiceItem
 type ServiceItem struct {
 	Service Service                `json:"service"`
-	Metrics map[string][][]float32 `json:"metrics"`
+	Metrics map[string][][]float64 `json:"metrics"`
 }

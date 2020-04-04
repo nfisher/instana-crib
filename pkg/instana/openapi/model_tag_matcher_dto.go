@@ -12,8 +12,4 @@ package openapi
 
 // TagMatcherDto struct for TagMatcherDto
 type TagMatcherDto struct {
-	Key      string `json:"key"`
-	Entity   string `json:"entity"`
-	Value    string `json:"value,omitempty"`
-	Operator string `json:"operator"`
 }

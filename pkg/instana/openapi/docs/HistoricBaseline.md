@@ -4,9 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Seasonality** | **string** |  | 
-**Baseline** | [**[][]float32**](array.md) |  | 
-**DeviationFactor** | **float64** |  | [optional] 
 **Type** | **string** |  | 
 **Operator** | **string** |  | 
 **LastUpdated** | **int64** |  | [optional] 

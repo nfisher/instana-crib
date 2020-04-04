@@ -12,6 +12,5 @@ package openapi
 
 // FixedHttpPathSegmentMatchingRule struct for FixedHttpPathSegmentMatchingRule
 type FixedHttpPathSegmentMatchingRule struct {
-	Name string `json:"name"`
 	Type string `json:"type"`
 }

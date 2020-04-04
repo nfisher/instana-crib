@@ -12,8 +12,7 @@ package openapi
 
 // StaticThreshold struct for StaticThreshold
 type StaticThreshold struct {
-	Value       float64 `json:"value,omitempty"`
-	Type        string  `json:"type"`
-	Operator    string  `json:"operator"`
-	LastUpdated int64   `json:"lastUpdated,omitempty"`
+	Type        string `json:"type"`
+	Operator    string `json:"operator"`
+	LastUpdated int64  `json:"lastUpdated,omitempty"`
 }

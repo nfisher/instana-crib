@@ -4,7 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Aggregation** | **string** |  | 
 **AlertType** | **string** |  | 
 **MetricName** | **string** |  | 
 

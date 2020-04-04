@@ -12,7 +12,6 @@ package openapi
 
 // SystemRule struct for SystemRule
 type SystemRule struct {
-	SystemRuleId string `json:"systemRuleId"`
 	// Values: `\"THRESHOLD\"`  `\"SYSTEM\"`  `\"ENTITY_VERIFICATION\"`
 	RuleType string `json:"ruleType"`
 	Severity int32  `json:"severity,omitempty"`

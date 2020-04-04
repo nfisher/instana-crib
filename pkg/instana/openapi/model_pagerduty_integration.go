@@ -12,8 +12,7 @@ package openapi
 
 // PagerdutyIntegration struct for PagerdutyIntegration
 type PagerdutyIntegration struct {
-	ServiceIntegrationKey string `json:"serviceIntegrationKey"`
-	Id                    string `json:"id"`
-	Kind                  string `json:"kind"`
-	Name                  string `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

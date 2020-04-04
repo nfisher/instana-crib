@@ -4,10 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**MatchingEntityType** | **string** |  | 
-**MatchingOperator** | **string** |  | 
-**MatchingEntityLabel** | **string** |  | 
-**OfflineDuration** | **int64** |  | [optional] 
 **RuleType** | **string** | Values: &#x60;\&quot;THRESHOLD\&quot;&#x60;  &#x60;\&quot;SYSTEM\&quot;&#x60;  &#x60;\&quot;ENTITY_VERIFICATION\&quot;&#x60; | 
 **Severity** | **int32** |  | [optional] 
 

@@ -4,9 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**WebhookUrl** | **string** |  | 
-**IconUrl** | **string** |  | 
-**Channel** | **string** |  | 
 **Id** | **string** |  | 
 **Kind** | **string** |  | 
 **Name** | **string** |  | 

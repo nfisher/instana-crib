@@ -12,8 +12,7 @@ package openapi
 
 // Office365Integration struct for Office365Integration
 type Office365Integration struct {
-	WebhookUrl string `json:"webhookUrl"`
-	Id         string `json:"id"`
-	Kind       string `json:"kind"`
-	Name       string `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

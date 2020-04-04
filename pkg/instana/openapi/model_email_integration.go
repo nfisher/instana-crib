@@ -12,8 +12,7 @@ package openapi
 
 // EmailIntegration struct for EmailIntegration
 type EmailIntegration struct {
-	Emails []string `json:"emails"`
-	Id     string   `json:"id"`
-	Kind   string   `json:"kind"`
-	Name   string   `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

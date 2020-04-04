@@ -4,7 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**WebhookUrl** | **string** |  | 
 **Id** | **string** |  | 
 **Kind** | **string** |  | 
 **Name** | **string** |  | 

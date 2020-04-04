@@ -12,8 +12,6 @@ package openapi
 
 // UserImpactWebsiteTimeThreshold struct for UserImpactWebsiteTimeThreshold
 type UserImpactWebsiteTimeThreshold struct {
-	Users          int32   `json:"users,omitempty"`
-	UserPercentage float64 `json:"userPercentage,omitempty"`
-	Type           string  `json:"type"`
-	TimeWindow     int64   `json:"timeWindow,omitempty"`
+	Type       string `json:"type"`
+	TimeWindow int64  `json:"timeWindow,omitempty"`
 }

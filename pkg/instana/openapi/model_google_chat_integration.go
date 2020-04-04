@@ -12,8 +12,7 @@ package openapi
 
 // GoogleChatIntegration struct for GoogleChatIntegration
 type GoogleChatIntegration struct {
-	WebhookUrl string `json:"webhookUrl"`
-	Id         string `json:"id"`
-	Kind       string `json:"kind"`
-	Name       string `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

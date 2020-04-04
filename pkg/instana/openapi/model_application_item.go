@@ -13,5 +13,5 @@ package openapi
 // ApplicationItem struct for ApplicationItem
 type ApplicationItem struct {
 	Application Application            `json:"application"`
-	Metrics     map[string][][]float32 `json:"metrics"`
+	Metrics     map[string][][]float64 `json:"metrics"`
 }

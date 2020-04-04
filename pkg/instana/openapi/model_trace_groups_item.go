@@ -15,5 +15,5 @@ type TraceGroupsItem struct {
 	Name      string                 `json:"name"`
 	Timestamp int64                  `json:"timestamp,omitempty"`
 	Cursor    IngestionOffsetCursor  `json:"cursor"`
-	Metrics   map[string][][]float32 `json:"metrics"`
+	Metrics   map[string][][]float64 `json:"metrics"`
 }

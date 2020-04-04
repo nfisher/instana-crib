@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **Message** | **string** |  | 
 **Actor** | [**LogEntryActor**](LogEntryActor.md) |  | 
 **Timestamp** | **int64** |  | [optional] 
-**Meta** | [**map[string]map[string]interface{}**](map[string]interface{}.md) |  | 
+**Meta** | **map[string]map[string]interface{}** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

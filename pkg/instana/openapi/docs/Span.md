@@ -17,7 +17,7 @@ Name | Type | Description | Notes
 **BatchSelfTime** | **int64** |  | [optional] 
 **Kind** | **string** |  | 
 **IsSynthetic** | **bool** |  | [optional] 
-**Data** | [**map[string]map[string]interface{}**](map[string]interface{}.md) |  | 
+**Data** | **map[string]map[string]interface{}** |  | 
 **Source** | [**SpanRelation**](SpanRelation.md) |  | [optional] 
 **Destination** | [**SpanRelation**](SpanRelation.md) |  | [optional] 
 **StackTrace** | [**[]StackTraceItem**](StackTraceItem.md) |  | 

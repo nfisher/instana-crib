@@ -4,7 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Value** | **float64** |  | [optional] 
 **Type** | **string** |  | 
 **Operator** | **string** |  | 
 **LastUpdated** | **int64** |  | [optional] 

@@ -12,7 +12,6 @@ package openapi
 
 // SlownessWebsiteAlertRule struct for SlownessWebsiteAlertRule
 type SlownessWebsiteAlertRule struct {
-	Aggregation string `json:"aggregation"`
-	AlertType   string `json:"alertType"`
-	MetricName  string `json:"metricName"`
+	AlertType  string `json:"alertType"`
+	MetricName string `json:"metricName"`
 }

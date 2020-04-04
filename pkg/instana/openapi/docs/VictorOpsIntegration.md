@@ -4,8 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ApiKey** | **string** |  | 
-**RoutingKey** | **string** |  | 
 **Id** | **string** |  | 
 **Kind** | **string** |  | 
 **Name** | **string** |  | 

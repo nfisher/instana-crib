@@ -13,5 +13,5 @@ package openapi
 // EndpointItem struct for EndpointItem
 type EndpointItem struct {
 	Endpoint Endpoint               `json:"endpoint"`
-	Metrics  map[string][][]float32 `json:"metrics"`
+	Metrics  map[string][][]float64 `json:"metrics"`
 }

@@ -12,6 +12,5 @@ package openapi
 
 // UnsupportedHttpPathSegmentMatchingRule struct for UnsupportedHttpPathSegmentMatchingRule
 type UnsupportedHttpPathSegmentMatchingRule struct {
-	UnsupportedType string `json:"unsupportedType,omitempty"`
-	Type            string `json:"type"`
+	Type string `json:"type"`
 }

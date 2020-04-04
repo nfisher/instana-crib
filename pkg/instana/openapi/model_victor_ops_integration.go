@@ -12,9 +12,7 @@ package openapi
 
 // VictorOpsIntegration struct for VictorOpsIntegration
 type VictorOpsIntegration struct {
-	ApiKey     string `json:"apiKey"`
-	RoutingKey string `json:"routingKey"`
-	Id         string `json:"id"`
-	Kind       string `json:"kind"`
-	Name       string `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

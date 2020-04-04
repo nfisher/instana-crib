@@ -12,11 +12,7 @@ package openapi
 
 // OpsgenieIntegration struct for OpsgenieIntegration
 type OpsgenieIntegration struct {
-	ApiKey string `json:"apiKey"`
-	Tags   string `json:"tags,omitempty"`
-	Region string `json:"region"`
-	Alias  string `json:"alias,omitempty"`
-	Id     string `json:"id"`
-	Kind   string `json:"kind"`
-	Name   string `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

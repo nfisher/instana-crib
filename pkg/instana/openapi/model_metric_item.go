@@ -19,5 +19,5 @@ type MetricItem struct {
 	Tags       []string               `json:"tags,omitempty"`
 	Label      string                 `json:"label,omitempty"`
 	Host       string                 `json:"host,omitempty"`
-	Metrics    map[string][][]float32 `json:"metrics,omitempty"`
+	Metrics    map[string][][]float64 `json:"metrics,omitempty"`
 }

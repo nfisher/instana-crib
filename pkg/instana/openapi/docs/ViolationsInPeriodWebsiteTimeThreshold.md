@@ -4,7 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Violations** | **int32** |  | [optional] 
 **Type** | **string** |  | 
 **TimeWindow** | **int64** |  | [optional] 
 

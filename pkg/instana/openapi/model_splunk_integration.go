@@ -12,9 +12,7 @@ package openapi
 
 // SplunkIntegration struct for SplunkIntegration
 type SplunkIntegration struct {
-	Url   string `json:"url"`
-	Token string `json:"token"`
-	Id    string `json:"id"`
-	Kind  string `json:"kind"`
-	Name  string `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

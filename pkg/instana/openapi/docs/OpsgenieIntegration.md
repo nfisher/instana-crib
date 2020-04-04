@@ -4,10 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ApiKey** | **string** |  | 
-**Tags** | **string** |  | [optional] 
-**Region** | **string** |  | 
-**Alias** | **string** |  | [optional] 
 **Id** | **string** |  | 
 **Kind** | **string** |  | 
 **Name** | **string** |  | 

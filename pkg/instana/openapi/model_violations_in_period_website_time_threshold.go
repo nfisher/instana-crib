@@ -12,7 +12,6 @@ package openapi
 
 // ViolationsInPeriodWebsiteTimeThreshold struct for ViolationsInPeriodWebsiteTimeThreshold
 type ViolationsInPeriodWebsiteTimeThreshold struct {
-	Violations int32  `json:"violations,omitempty"`
 	Type       string `json:"type"`
 	TimeWindow int64  `json:"timeWindow,omitempty"`
 }

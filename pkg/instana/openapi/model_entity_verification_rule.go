@@ -12,10 +12,6 @@ package openapi
 
 // EntityVerificationRule struct for EntityVerificationRule
 type EntityVerificationRule struct {
-	MatchingEntityType  string `json:"matchingEntityType"`
-	MatchingOperator    string `json:"matchingOperator"`
-	MatchingEntityLabel string `json:"matchingEntityLabel"`
-	OfflineDuration     int64  `json:"offlineDuration,omitempty"`
 	// Values: `\"THRESHOLD\"`  `\"SYSTEM\"`  `\"ENTITY_VERIFICATION\"`
 	RuleType string `json:"ruleType"`
 	Severity int32  `json:"severity,omitempty"`

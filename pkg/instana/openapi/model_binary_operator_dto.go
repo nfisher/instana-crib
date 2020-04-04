@@ -12,7 +12,4 @@ package openapi
 
 // BinaryOperatorDto struct for BinaryOperatorDto
 type BinaryOperatorDto struct {
-	Left        map[string]interface{} `json:"left"`
-	Right       map[string]interface{} `json:"right"`
-	Conjunction string                 `json:"conjunction"`
 }

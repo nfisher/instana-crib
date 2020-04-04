@@ -12,10 +12,7 @@ package openapi
 
 // HistoricBaseline struct for HistoricBaseline
 type HistoricBaseline struct {
-	Seasonality     string      `json:"seasonality"`
-	Baseline        [][]float32 `json:"baseline"`
-	DeviationFactor float64     `json:"deviationFactor,omitempty"`
-	Type            string      `json:"type"`
-	Operator        string      `json:"operator"`
-	LastUpdated     int64       `json:"lastUpdated,omitempty"`
+	Type        string `json:"type"`
+	Operator    string `json:"operator"`
+	LastUpdated int64  `json:"lastUpdated,omitempty"`
 }

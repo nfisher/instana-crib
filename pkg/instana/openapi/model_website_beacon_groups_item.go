@@ -15,5 +15,5 @@ type WebsiteBeaconGroupsItem struct {
 	Name              string                 `json:"name"`
 	EarliestTimestamp int64                  `json:"earliestTimestamp,omitempty"`
 	Cursor            IngestionOffsetCursor  `json:"cursor"`
-	Metrics           map[string][][]float32 `json:"metrics"`
+	Metrics           map[string][][]float64 `json:"metrics"`
 }

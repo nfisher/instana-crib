@@ -12,8 +12,6 @@ package openapi
 
 // StatusCodeWebsiteAlertRule struct for StatusCodeWebsiteAlertRule
 type StatusCodeWebsiteAlertRule struct {
-	Operator   string `json:"operator"`
-	Value      string `json:"value"`
 	AlertType  string `json:"alertType"`
 	MetricName string `json:"metricName"`
 }

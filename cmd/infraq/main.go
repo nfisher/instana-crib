@@ -163,10 +163,10 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 	var metric = item.Metrics[metricName]
 	var previous float64
 	for i, v := range metric {
-		var timestamp = float64(v[SeriesTimestamp]) + float64(i)
-		var value = float64(v[SeriesValue])
+		var timestamp = v[SeriesTimestamp]
+		var value = v[SeriesValue]
 		if math.IsInf(value, 0) || math.IsNaN(value) {
-			value = float64(0.0)
+			value = 0.0
 		}
 
 		xValues[i] = timestamp
@@ -202,7 +202,7 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 			Style:     chart.StyleShow(),
 		},
 		Width:  800,
-		Height: 600,
+		Height: 494,
 		Series: []chart.Series{
 			chart.ContinuousSeries{
 				XValues: xValues,

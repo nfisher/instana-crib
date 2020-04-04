@@ -12,10 +12,7 @@ package openapi
 
 // SlackIntegration struct for SlackIntegration
 type SlackIntegration struct {
-	WebhookUrl string `json:"webhookUrl"`
-	IconUrl    string `json:"iconUrl"`
-	Channel    string `json:"channel"`
-	Id         string `json:"id"`
-	Kind       string `json:"kind"`
-	Name       string `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

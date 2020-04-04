@@ -4,8 +4,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Users** | **int32** |  | [optional] 
-**UserPercentage** | **float64** |  | [optional] 
 **Type** | **string** |  | 
 **TimeWindow** | **int64** |  | [optional] 
 

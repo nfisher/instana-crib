@@ -12,6 +12,5 @@ package openapi
 
 // PathParameterHttpPathSegmentMatchingRule struct for PathParameterHttpPathSegmentMatchingRule
 type PathParameterHttpPathSegmentMatchingRule struct {
-	Name string `json:"name"`
 	Type string `json:"type"`
 }

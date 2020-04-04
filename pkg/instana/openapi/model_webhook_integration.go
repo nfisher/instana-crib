@@ -12,9 +12,7 @@ package openapi
 
 // WebhookIntegration struct for WebhookIntegration
 type WebhookIntegration struct {
-	WebhookUrls []string `json:"webhookUrls"`
-	Headers     []string `json:"headers,omitempty"`
-	Id          string   `json:"id"`
-	Kind        string   `json:"kind"`
-	Name        string   `json:"name"`
+	Id   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

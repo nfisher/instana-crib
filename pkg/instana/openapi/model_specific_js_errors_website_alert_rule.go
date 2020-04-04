@@ -12,8 +12,6 @@ package openapi
 
 // SpecificJsErrorsWebsiteAlertRule struct for SpecificJsErrorsWebsiteAlertRule
 type SpecificJsErrorsWebsiteAlertRule struct {
-	Operator   string `json:"operator"`
-	Value      string `json:"value,omitempty"`
 	AlertType  string `json:"alertType"`
 	MetricName string `json:"metricName"`
 }

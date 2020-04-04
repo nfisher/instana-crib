@@ -3545,6 +3545,7 @@ components:
           additionalProperties:
             items:
               items:
+                format: double
                 type: number
               type: array
             type: array
@@ -4188,6 +4189,7 @@ components:
           additionalProperties:
             items:
               items:
+                format: double
                 type: number
               type: array
             type: array
@@ -5296,6 +5298,7 @@ components:
           additionalProperties:
             items:
               items:
+                format: double
                 type: number
               type: array
             type: array
@@ -5511,6 +5514,7 @@ components:
           additionalProperties:
             items:
               items:
+                format: double
                 type: number
               type: array
             type: array
@@ -5692,6 +5696,7 @@ components:
           additionalProperties:
             items:
               items:
+                format: double
                 type: number
               type: array
             type: array
@@ -7412,6 +7417,7 @@ components:
         baseline:
           items:
             items:
+              format: double
               type: number
             type: array
           type: array
@@ -8036,6 +8042,7 @@ components:
           additionalProperties:
             items:
               items:
+                format: double
                 type: number
               type: array
             type: array
@@ -8916,6 +8923,7 @@ components:
           additionalProperties:
             items:
               items:
+                format: double
                 type: number
               type: array
             type: array
