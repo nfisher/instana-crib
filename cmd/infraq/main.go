@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/nfisher/instana-crib/pkg/instana/openapi"
@@ -22,8 +24,6 @@ const (
 	SeriesTimestamp = 0
 	// SeriesValue index for the value in the metric results.
 	SeriesValue = 1
-	// Metric is the metric.
-	Metric = "cpu.user"
 )
 
 func newConfiguration(apiURL string, isInsecure bool) (*openapi.Configuration, error) {
@@ -50,9 +50,16 @@ func newConfiguration(apiURL string, isInsecure bool) (*openapi.Configuration, e
 func main() {
 	var apiToken = os.Getenv("INSTANA_TOKEN")
 	var apiURL = os.Getenv("INSTANA_URL")
-	var queryString string
 
+	var metricName string
+	var queryString string
+	var pluginType string
+	var windowSize int64
+
+	flag.StringVar(&metricName, "metric", "cpu.user", "Metric name to extract")
 	flag.StringVar(&queryString, "query", "entity.zone:us-east-2", "Infrastructure query to use as part of the metrics request")
+	flag.StringVar(&pluginType, "plugin", "host", "Snapshot plugin type (e.g. host)")
+	flag.Int64Var(&windowSize, "window", 3600, "metric window size in seconds")
 	flag.Parse()
 
 	log.Printf("API Key Set: %v\n", apiToken != "")
@@ -83,12 +90,12 @@ func main() {
 	var query = &openapi.GetInfrastructureMetricsOpts{
 		GetCombinedMetrics: optional.NewInterface(openapi.GetCombinedMetrics{
 			TimeFrame: openapi.TimeFrame{
-				WindowSize: 3600,
+				WindowSize: windowSize,
 			},
-			Rollup:  1,
+			//Rollup:  1,
 			Query:   queryString,
-			Plugin:  "host",
-			Metrics: []string{Metric},
+			Plugin:  pluginType,
+			Metrics: []string{metricName},
 		}),
 	}
 
@@ -105,9 +112,12 @@ func main() {
 
 	for _, item := range configResp.Items {
 		prefix := item.Host
-		log.Println(prefix, len(item.Metrics[Metric]))
+		if prefix == "" {
+			prefix = strings.Replace(item.Label, "/", "-", -1)
+		}
+		log.Printf("%s %v\n", prefix, item.Metrics[metricName])
 
-		lineChart := newChart(&item)
+		lineChart := newChart(&item, metricName)
 		if lineChart == nil {
 			continue
 		}
@@ -141,8 +151,8 @@ func renderChart(name string, lineChart *chart.Chart) error {
 	return nil
 }
 
-func newChart(item *openapi.MetricItem) *chart.Chart {
-	metricsLen := len(item.Metrics[Metric])
+func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
+	metricsLen := len(item.Metrics[metricName])
 	if metricsLen < 2 {
 		log.Printf("no metrics available: %s\n", item.Host)
 		return nil
@@ -150,22 +160,31 @@ func newChart(item *openapi.MetricItem) *chart.Chart {
 	xValues := make([]float64, metricsLen, metricsLen)
 	yValues := make([]float64, metricsLen, metricsLen)
 
-	var lastTimestamp float32
-	for i, v := range item.Metrics[Metric] {
-		currentTimestamp := v[SeriesTimestamp]
-		value := v[SeriesValue]
-
-		if lastTimestamp >= currentTimestamp {
-			log.Printf("timestamps out of order %f, %f\n", lastTimestamp, currentTimestamp)
+	var metric = item.Metrics[metricName]
+	var previous float64
+	for i, v := range metric {
+		var timestamp = float64(v[SeriesTimestamp]) + float64(i)
+		var value = float64(v[SeriesValue])
+		if math.IsInf(value, 0) || math.IsNaN(value) {
+			value = float64(0.0)
 		}
-		lastTimestamp = currentTimestamp
 
-		xValues[i] = float64(currentTimestamp)
-		yValues[i] = float64(value)
+		xValues[i] = timestamp
+		yValues[i] = value
+
+		if timestamp <= previous {
+			log.Printf("warning timestamps out of order %f >= %f: %f %v\n", previous, timestamp, value, int64(v[SeriesTimestamp]))
+		}
+		previous = timestamp
+	}
+
+	title := item.Host
+	if "" == title {
+		title = item.Label
 	}
 
 	return &chart.Chart{
-		Title:      item.Host,
+		Title:      title,
 		TitleStyle: chart.StyleShow(),
 		Background: chart.Style{
 			Padding: chart.Box{
