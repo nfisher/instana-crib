@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Infra Viewer</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.1/css/bulma.min.css" integrity="sha256-1nEaE91OpXJD7M6W5uSiqxhdmrY+lOOTHC1iUxU9Pds=" crossorigin="anonymous" />
+        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs=" crossorigin="anonymous"></script>
+        <style>
+            html, body {
+                background: #ECF0F3;
+                height: 100%;
+            }
+            nav.navbar {
+                border-top: 4px solid #17a1e6;
+                margin-bottom: 1rem;
+            }
+            table .region {
+                min-width: 7rem;
+            }
+            table .host {
+                min-width: 12rem;
+            }
+        </style>
+    </head>
+
+    <body>
+        <nav class="navbar is-white" role="navigation" aria-label="main navigation">
+            <div class="container is-fluid">
+                <div class="navbar-brand">
+                    <a class="navbar-item" href="#">
+                        <img src="https://www.instana.com/media/INSTANA-logo-01.svg" alt="Instana Logo"  width="112" height="28"> 
+                    </a>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="container is-fluid">
+            <div class="columns">
+                <div class="column is-3">
+                    <nav class="panel has-background-white">
+                        <p class="panel-heading">
+                            Data Centre Report
+                        </p>
+
+                        <div class="panel-block">
+                            <form>
+                                <div class="field">
+                                    <label class="label">Entity Type</label>
+                                    <div class="control">
+                                        <div class="select">
+                                            <select>
+                                                <option>Host</option>
+                                                <option>Namespace</option>
+                                                <option>Pod</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label">From</label>
+                                    <div class="control">
+                                        <input class="input is-fullwidth" type="date" name="date">
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label">Range</label>
+                                    <div class="tabs is-toggle">
+                                        <ul>
+                                            <li class="is-active">
+                                            <a>
+                                                <span class="icon is-small"><i class="fas fa-calendar-day" aria-hidden="true"></i></span>
+                                                <span>Day</span>
+                                            </a>
+                                            </li>
+                                            <li>
+                                            <a>
+                                                <span class="icon is-small"><i class="fas fa-calendar-week" aria-hidden="true"></i></span>
+                                                <span>Week</span>
+                                            </a>
+                                            </li>
+                                            <li>
+                                            <a>
+                                                <span class="icon is-small"><i class="fas fa-calendar-alt" aria-hidden="true"></i></span>
+                                                <span>Month</span>
+                                            </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </nav>
+                    <nav class="panel has-background-white">
+                        <p class="panel-heading">
+                          Zones
+                        </p>
+                        <div class="panel-block">
+                          <p class="control has-icons-left">
+                            <input class="input" type="text" placeholder="Search">
+                            <span class="icon is-left">
+                              <i class="fas fa-search" aria-hidden="true"></i>
+                            </span>
+                          </p>
+                        </div>
+                        
+                        <a class="panel-block is-active">
+                          <span class="panel-icon">
+                            <i class="fas fa-atlas" aria-hidden="true"></i>
+                          </span>
+                          pcf-264
+                        </a>
+                       
+                        <a class="panel-block">
+                            <span class="panel-icon">
+                              <i class="fas fa-atlas" aria-hidden="true"></i>
+                            </span>
+                            pcf-2.8
+                        </a>
+
+                        <a class="panel-block">
+                            <span class="panel-icon">
+                              <i class="fas fa-atlas" aria-hidden="true"></i>
+                            </span>
+                            k8s-demo
+                        </a>
+
+                        <a class="panel-block">
+                            <span class="panel-icon">
+                              <i class="fas fa-atlas" aria-hidden="true"></i>
+                            </span>
+                            vault
+                        </a>
+
+                        <a class="panel-block">
+                            <span class="panel-icon">
+                              <i class="fas fa-atlas" aria-hidden="true"></i>
+                            </span>
+                            us-east-2a
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="column is-9">
+                    <nav class="panel has-background-white">
+                        <p class="panel-heading">
+                            pcf-264
+                        </p>
+
+                        <div class="panel-block">
+                            <table class="table is-fullwidth is-striped">
+                                <thead>
+                                    <tr>
+                                        <th class="region">Region</th>
+                                        <th class="host">Host</th>
+                                        <th class="os">OS</th>
+                                        <th class="cpu">CPU</th>
+                                        <th class="memory">Memory</th>
+                                        <th class="cpu_usage has-text-right">CPU Usage</th>
+                                        <th class="memory_usage has-text-right">Memory Usage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>us-west-2a</td>
+                                    <td>ec2-54-188-70-207</td>
+                                    <td>Linux<br> <span class="has-text-grey is-size-7">4.15.0-55-generic (amd64)</span></td>
+                                    <td>2 x <br> <span class="has-text-grey is-size-7">Intel Xeon Platinum 8175M @ 2.50GHz</span></td>
+                                    <td>957.29 MiB</td>
+                                    <td class="has-text-right">35%</td>
+                                    <td class="has-text-right">27%</td>
+                                </tr>
+
+                                <tr>
+                                    <td>us-west-2a</td>
+                                    <td>ec2-54-188-70-207</td>
+                                    <td>Linux<br> <span class="has-text-grey is-size-7">4.15.0-55-generic (amd64)</span></td>
+                                    <td>2 x <br> <span class="has-text-grey is-size-7">Intel Xeon Platinum 8175M @ 2.50GHz</span></td>
+                                    <td>957.29 MiB</td>
+                                    <td class="has-text-right">35%</td>
+                                    <td class="has-text-right">27%</td>
+                                </tr>
+
+                                <tr>
+                                    <td>us-west-2a</td>
+                                    <td>ec2-54-188-70-207</td>
+                                    <td>Linux<br> <span class="has-text-grey is-size-7">4.15.0-55-generic (amd64)</span></td>
+                                    <td>2 x <br> <span class="has-text-grey is-size-7">Intel Xeon Platinum 8175M @ 2.50GHz</span></td>
+                                    <td>957.29 MiB</td>
+                                    <td class="has-text-right">35%</td>
+                                    <td class="has-text-right">27%</td>
+                                </tr>
+
+                                <tr>
+                                    <td>us-west-2a</td>
+                                    <td>ec2-54-188-70-207</td>
+                                    <td>Linux<br> <span class="has-text-grey is-size-7">4.15.0-55-generic (amd64)</span></td>
+                                    <td>2 x <br> <span class="has-text-grey is-size-7">Intel Xeon Platinum 8175M @ 2.50GHz</span></td>
+                                    <td>957.29 MiB</td>
+                                    <td class="has-text-right">35%</td>
+                                    <td class="has-text-right">27%</td>
+                                </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
