@@ -12,7 +12,7 @@
 *.out
 openapi-generator-cli.jar
 infraq
-*.png
+/*.png
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
