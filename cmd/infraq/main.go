@@ -197,7 +197,7 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 			Style:     chart.StyleShow(),
 		},
 		YAxis: chart.YAxis{
-			Name:      "usage",
+			Name:      metricName,
 			NameStyle: chart.StyleShow(),
 			Style:     chart.StyleShow(),
 		},
