@@ -82,7 +82,7 @@ func main() {
 	log.Printf("API URL:     %v\n", apiURL)
 	log.Printf("Metric:      %v\n", metricName)
 	log.Printf("Query:       %v\n", queryString)
-	log.Printf("Rollup:      %v\n", rollup)
+	log.Printf("Rollup:      %v\n", time.Duration(rollup)*time.Second)
 	log.Printf("Window Size: %v\n", time.Duration(windowSize/1000)*time.Second)
 
 	if apiToken == "" {
@@ -148,6 +148,16 @@ func main() {
 		}
 	}
 
+	var snapshotsQuery = &openapi.GetSnapshotsOpts{
+		Query:      optional.NewString(queryString),
+		Plugin:     optional.NewString(pluginType),
+		WindowSize: optional.NewInt64(windowSize),
+	}
+	snapshotResp, httpResp, err := client.InfrastructureMetricsApi.GetSnapshots(ctx, snapshotsQuery)
+	if err != nil {
+		log.Fatalf("error in retrieving snapshots: %s\n", err.(openapi.GenericOpenAPIError).Body())
+	}
+	log.Printf("%v\n", len(snapshotResp.Items))
 }
 
 func renderChart(name string, lineChart *chart.Chart) error {
@@ -212,9 +222,10 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 			},
 		},
 		XAxis: chart.XAxis{
-			Name:      "time",
-			NameStyle: chart.StyleShow(),
-			Style:     chart.StyleShow(),
+			Name:           "time",
+			NameStyle:      chart.StyleShow(),
+			Style:          chart.StyleShow(),
+			ValueFormatter: func(v interface{}) string { return time.Unix(int64(v.(float64))/1000, 0).Format("15:04:05") },
 		},
 		YAxis: chart.YAxis{
 			Name:           metricName,
