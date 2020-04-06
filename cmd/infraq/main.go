@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -27,6 +28,80 @@ const (
 	SeriesValue = 1
 )
 
+func main() {
+	var apiToken = os.Getenv("INSTANA_TOKEN")
+	var apiURL = os.Getenv("INSTANA_URL")
+
+	var metricName string
+	var queryString string
+	var pluginType string
+	var windowSize int64
+
+	flag.StringVar(&metricName, "metric", "cpu.user", "Metric name to extract")
+	flag.StringVar(&queryString, "query", "entity.zone:us-east-2", "Infrastructure query to use as part of the metrics request")
+	flag.StringVar(&pluginType, "plugin", "host", "Snapshot plugin type (e.g. host)")
+	flag.Int64Var(&windowSize, "window", 3600, "metric window size in seconds")
+	flag.Parse()
+
+	rollup, err := rollupForWindow(windowSize)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("API Key Set: %v\n", apiToken != "")
+	log.Printf("API URL:     %v\n", apiURL)
+	log.Printf("Metric:      %v\n", metricName)
+	log.Printf("Query:       %v\n", queryString)
+	log.Printf("Rollup:      %v\n", time.Duration(rollup)*time.Second)
+	log.Printf("Window Size: %v\n", time.Duration(windowSize/1000)*time.Second)
+
+	if apiToken == "" {
+		panic("INSTANA_TOKEN environment variable should be set to the Instana API token. Was a k8s secret created for this?")
+	}
+
+	if apiURL == "" {
+		panic("INSTANA_URL environment variable should be set to the Instana API end-point. Was a k8s secret created for this?")
+	}
+
+	api, err := NewClient(apiURL, apiToken)
+	if err != nil {
+		log.Fatalf("unable to create client: %v\n", err)
+	}
+
+	metrics, err := api.ListMetrics(queryString, pluginType, metricName, rollup, windowSize)
+	if err != nil {
+		log.Fatalf("error retrieving metrics: %v\n", err)
+	}
+
+	snapshots, err := api.ListSnapshots(queryString, pluginType, windowSize)
+	if err != nil {
+		log.Fatalf("error retrieving snapshots: %v\n", err)
+	}
+
+	log.Printf("Metrics:     %v\n", len(metrics))
+	log.Printf("Snapshots:   %v\n", len(snapshots))
+}
+
+func writeCharts(metrics []openapi.MetricItem, metricName string) {
+	for _, item := range metrics {
+		prefix := item.Host
+		if prefix == "" {
+			prefix = strings.Replace(item.Label, "/", "-", -1)
+		}
+		//log.Printf("%s %v\n", prefix, item.Metrics[metricName])
+
+		lineChart := newChart(&item, metricName)
+		if lineChart == nil {
+			continue
+		}
+
+		err := renderChart(prefix, lineChart)
+		if err != nil {
+			log.Printf("error rendering chart %s: %v\n", prefix, err.Error())
+		}
+	}
+}
+
 func newConfiguration(apiURL string, isInsecure bool) (*openapi.Configuration, error) {
 	u, err := url.Parse(apiURL)
 	if err != nil {
@@ -48,54 +123,32 @@ func newConfiguration(apiURL string, isInsecure bool) (*openapi.Configuration, e
 	return configuration, nil
 }
 
-func main() {
-	var apiToken = os.Getenv("INSTANA_TOKEN")
-	var apiURL = os.Getenv("INSTANA_URL")
-
-	var metricName string
-	var queryString string
-	var pluginType string
-	var windowSize int64
-
-	flag.StringVar(&metricName, "metric", "cpu.user", "Metric name to extract")
-	flag.StringVar(&queryString, "query", "entity.zone:us-east-2", "Infrastructure query to use as part of the metrics request")
-	flag.StringVar(&pluginType, "plugin", "host", "Snapshot plugin type (e.g. host)")
-	flag.Int64Var(&windowSize, "window", 3600, "metric window size in seconds")
-	flag.Parse()
-
+func rollupForWindow(windowSize int64) (int64, error) {
 	rollup := windowSize / 1000 / 600
 	if rollup <= 1 {
-		rollup = 1
+		return 1, nil
 	} else if rollup <= 5 {
-		rollup = 5
+		return 5, nil
 	} else if rollup <= 60 {
-		rollup = 60
+		return 60, nil
 	} else if rollup <= 300 {
-		rollup = 300
+		return 300, nil
 	} else if rollup <= 3600 {
-		rollup = 3600
-	} else {
-		log.Fatal("Rollup is too large for this API call, maximum is 25 days (2,160,000,000)")
+		return 3600, nil
 	}
 
-	log.Printf("API Key Set: %v\n", apiToken != "")
-	log.Printf("API URL:     %v\n", apiURL)
-	log.Printf("Metric:      %v\n", metricName)
-	log.Printf("Query:       %v\n", queryString)
-	log.Printf("Rollup:      %v\n", time.Duration(rollup)*time.Second)
-	log.Printf("Window Size: %v\n", time.Duration(windowSize/1000)*time.Second)
+	return 0, errors.New("rollup is too large for API call, maximum call size is 25 days")
+}
 
-	if apiToken == "" {
-		panic("INSTANA_TOKEN environment variable should be set to the Instana API token. Was a k8s secret created for this?")
-	}
+type InfraQuery interface {
+	ListMetrics(queryString string, pluginType string, metricName string, rollup int64, windowSize int64) ([]openapi.MetricItem, error)
+	ListSnapshots(queryString string, pluginType string, windowSize int64) ([]openapi.SnapshotItem, error)
+}
 
-	if apiURL == "" {
-		panic("INSTANA_URL environment variable should be set to the Instana API end-point. Was a k8s secret created for this?")
-	}
-
+func NewClient(apiURL string, apiToken string) (*InfraQueryAPI, error) {
 	configuration, err := newConfiguration(apiURL, true)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, err
 	}
 
 	client := openapi.NewAPIClient(configuration)
@@ -105,8 +158,39 @@ func main() {
 		openapi.APIKey{
 			Key:    apiToken,
 			Prefix: "apiToken",
-		})
+		},
+	)
 
+	api := &InfraQueryAPI{
+		client: client,
+		ctx:    ctx,
+	}
+
+	return api, nil
+}
+
+type InfraQueryAPI struct {
+	client *openapi.APIClient
+	ctx    context.Context
+}
+
+func (api *InfraQueryAPI) ListSnapshots(queryString string, pluginType string, windowSize int64) ([]openapi.SnapshotItem, error) {
+	var snapshotsQuery = &openapi.GetSnapshotsOpts{
+		Query:      optional.NewString(queryString),
+		Plugin:     optional.NewString(pluginType),
+		WindowSize: optional.NewInt64(windowSize),
+	}
+	snapshotResp, httpResp, err := api.client.InfrastructureMetricsApi.GetSnapshots(api.ctx, snapshotsQuery)
+	if err != nil {
+		log.Fatalf("error in retrieving snapshots: %s\n", err.(openapi.GenericOpenAPIError).Body())
+	}
+
+	log.Printf("Remaining:   %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
+
+	return snapshotResp.Items, nil
+}
+
+func (api *InfraQueryAPI) ListMetrics(queryString string, pluginType string, metricName string, rollup int64, windowSize int64) ([]openapi.MetricItem, error) {
 	var query = &openapi.GetInfrastructureMetricsOpts{
 		GetCombinedMetrics: optional.NewInterface(openapi.GetCombinedMetrics{
 			TimeFrame: openapi.TimeFrame{
@@ -119,45 +203,18 @@ func main() {
 		}),
 	}
 
-	configResp, httpResp, err := client.InfrastructureMetricsApi.GetInfrastructureMetrics(ctx, query)
+	metricsResp, httpResp, err := api.client.InfrastructureMetricsApi.GetInfrastructureMetrics(api.ctx, query)
 	if err != nil {
-		log.Fatalf("error in retrieving metrics: %s\n", err.(openapi.GenericOpenAPIError).Body())
+		return nil, fmt.Errorf("error in retrieving metrics: %s", err.(openapi.GenericOpenAPIError).Body())
 	}
 
-	log.Printf("Limit Remaining: %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
+	log.Printf("Remaining:   %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
 
-	if len(configResp.Items) < 1 {
-		log.Fatalln("No metrics found")
+	if len(metricsResp.Items) < 1 {
+		return nil, errors.New("No metrics found")
 	}
 
-	for _, item := range configResp.Items {
-		prefix := item.Host
-		if prefix == "" {
-			prefix = strings.Replace(item.Label, "/", "-", -1)
-		}
-		//log.Printf("%s %v\n", prefix, item.Metrics[metricName])
-
-		lineChart := newChart(&item, metricName)
-		if lineChart == nil {
-			continue
-		}
-
-		err := renderChart(prefix, lineChart)
-		if err != nil {
-			log.Printf("error rendering chart %s: %v\n", prefix, err.Error())
-		}
-	}
-
-	var snapshotsQuery = &openapi.GetSnapshotsOpts{
-		Query:      optional.NewString(queryString),
-		Plugin:     optional.NewString(pluginType),
-		WindowSize: optional.NewInt64(windowSize),
-	}
-	snapshotResp, httpResp, err := client.InfrastructureMetricsApi.GetSnapshots(ctx, snapshotsQuery)
-	if err != nil {
-		log.Fatalf("error in retrieving snapshots: %s\n", err.(openapi.GenericOpenAPIError).Body())
-	}
-	log.Printf("%v\n", len(snapshotResp.Items))
+	return metricsResp.Items, nil
 }
 
 func renderChart(name string, lineChart *chart.Chart) error {
