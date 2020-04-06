@@ -63,12 +63,13 @@ func main() {
 		panic("INSTANA_URL environment variable should be set to the Instana API end-point. Was a k8s secret created for this?")
 	}
 
-	api, err := NewClient(apiURL, apiToken)
+	var api InfraQuery
+	api, err = NewClient(apiURL, apiToken)
 	if err != nil {
 		log.Fatalf("unable to create client: %v\n", err)
 	}
 
-	metrics, err := api.ListMetrics(queryString, pluginType, metricName, rollup, windowSize)
+	metrics, err := api.ListMetrics(queryString, pluginType, []string{metricName}, rollup, windowSize)
 	if err != nil {
 		log.Fatalf("error retrieving metrics: %v\n", err)
 	}
@@ -140,12 +141,14 @@ func rollupForWindow(windowSize int64) (int64, error) {
 	return 0, errors.New("rollup is too large for API call, maximum call size is 25 days")
 }
 
+// InfraQuery is a common interface for infrastructure queries.
 type InfraQuery interface {
-	ListMetrics(queryString string, pluginType string, metricName string, rollup int64, windowSize int64) ([]openapi.MetricItem, error)
+	ListMetrics(queryString string, pluginType string, metrics []string, rollup int64, windowSize int64) ([]openapi.MetricItem, error)
 	ListSnapshots(queryString string, pluginType string, windowSize int64) ([]openapi.SnapshotItem, error)
 }
 
-func NewClient(apiURL string, apiToken string) (*InfraQueryAPI, error) {
+// NewClient builds an Instana API client from the specified URL and token.
+func NewClient(apiURL string, apiToken string) (InfraQuery, error) {
 	configuration, err := newConfiguration(apiURL, true)
 	if err != nil {
 		return nil, err
@@ -169,11 +172,13 @@ func NewClient(apiURL string, apiToken string) (*InfraQueryAPI, error) {
 	return api, nil
 }
 
+// InfraQueryAPI is a concrete implementation fo the InfraQuery interface using the openapi client.
 type InfraQueryAPI struct {
 	client *openapi.APIClient
 	ctx    context.Context
 }
 
+// ListSnapshots returns the list of snapshots matching the supplied query parameters.
 func (api *InfraQueryAPI) ListSnapshots(queryString string, pluginType string, windowSize int64) ([]openapi.SnapshotItem, error) {
 	var snapshotsQuery = &openapi.GetSnapshotsOpts{
 		Query:      optional.NewString(queryString),
@@ -190,7 +195,8 @@ func (api *InfraQueryAPI) ListSnapshots(queryString string, pluginType string, w
 	return snapshotResp.Items, nil
 }
 
-func (api *InfraQueryAPI) ListMetrics(queryString string, pluginType string, metricName string, rollup int64, windowSize int64) ([]openapi.MetricItem, error) {
+// ListMetrics returns the list of metrics matching the supplied query parameters.
+func (api *InfraQueryAPI) ListMetrics(queryString string, pluginType string, metrics []string, rollup int64, windowSize int64) ([]openapi.MetricItem, error) {
 	var query = &openapi.GetInfrastructureMetricsOpts{
 		GetCombinedMetrics: optional.NewInterface(openapi.GetCombinedMetrics{
 			TimeFrame: openapi.TimeFrame{
@@ -199,7 +205,7 @@ func (api *InfraQueryAPI) ListMetrics(queryString string, pluginType string, met
 			Rollup:  int32(rollup),
 			Query:   queryString,
 			Plugin:  pluginType,
-			Metrics: []string{metricName},
+			Metrics: metrics,
 		}),
 	}
 
