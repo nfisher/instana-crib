@@ -15,8 +15,8 @@
 export INSTANA_URL={URL}
 export INSTANA_TOKEN={TOKEN}
 
-./infraq -query='entity.zone:k8s-demo' -plugin=host -metric=cpu.system -window=300000
-./infraq -query='entity.zone:k8s-demo' -plugin=kubernetesPod -metric=cpuRequests -window=300000
+./infraq -query='entity.zone:k8s-demo' -plugin=host -metric=cpu.user -window=24h -to=2020-04-05
+./infraq -query='entity.zone:k8s-demo' -plugin=kubernetesPod -metric=cpuRequests -window=24h -to=2020-04-05
 ```
 
 ## Relevant API URLs
