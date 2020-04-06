@@ -2,21 +2,17 @@ package main
 
 import (
 	"bytes"
-	"context"
-	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"log"
 	"math"
-	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/antihax/optional"
+	"github.com/nfisher/instana-crib"
 	"github.com/nfisher/instana-crib/pkg/instana/openapi"
 	"github.com/wcharczuk/go-chart"
 )
@@ -28,24 +24,57 @@ const (
 	SeriesValue = 1
 )
 
+// Exec is the main execution loop of the application.
+func Exec(apiToken string, apiURL string, metricName string, pluginType string, queryString string, rollup int64, to int64, windowSize int64) {
+	var api instana.InfraQuery
+	api, err := instana.NewClient(apiURL, apiToken)
+	if err != nil {
+		log.Fatalf("unable to create client: %v\n", err)
+	}
+
+	metrics, err := api.ListMetrics(queryString, pluginType, []string{metricName}, rollup, windowSize, to)
+	if err != nil {
+		log.Fatalf("error retrieving metrics: %v\n", err)
+	}
+	writeCharts(metrics, metricName)
+
+	/*
+		snapshots, err := api.ListSnapshots(queryString, pluginType, windowSize)
+		if err != nil {
+			log.Fatalf("error retrieving snapshots: %v\n", err)
+		}
+		log.Printf("Snapshots:   %v\n", len(snapshots))
+	*/
+
+	log.Printf("Metrics:     %v\n", len(metrics))
+}
+
 func main() {
 	var apiToken = os.Getenv("INSTANA_TOKEN")
 	var apiURL = os.Getenv("INSTANA_URL")
 
 	var metricName string
-	var queryString string
 	var pluginType string
-	var windowSize int64
+	var queryString string
+	var toString string
+	var windowString string
 
 	flag.StringVar(&metricName, "metric", "cpu.user", "Metric name to extract")
 	flag.StringVar(&queryString, "query", "entity.zone:us-east-2", "Infrastructure query to use as part of the metrics request")
 	flag.StringVar(&pluginType, "plugin", "host", "Snapshot plugin type (e.g. host)")
-	flag.Int64Var(&windowSize, "window", 3600, "metric window size in seconds")
+	flag.StringVar(&toString, "to", time.Now().UTC().Format("2006-01-02"), "date time in the format, omitting the clock assumes midnight (YYYY-MM-DD hh:mm:ss)")
+	flag.StringVar(&windowString, "window", "60s", `metric window size (valid time units are "s", "m", "h")`)
+
 	flag.Parse()
+
+	windowSize, err := instana.ParseDuration(windowString)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	rollup, err := rollupForWindow(windowSize)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	log.Printf("API Key Set: %v\n", apiToken != "")
@@ -53,34 +82,23 @@ func main() {
 	log.Printf("Metric:      %v\n", metricName)
 	log.Printf("Query:       %v\n", queryString)
 	log.Printf("Rollup:      %v\n", time.Duration(rollup)*time.Second)
+	log.Printf("To:          %v\n", toString)
 	log.Printf("Window Size: %v\n", time.Duration(windowSize/1000)*time.Second)
 
 	if apiToken == "" {
-		panic("INSTANA_TOKEN environment variable should be set to the Instana API token. Was a k8s secret created for this?")
+		log.Fatalln("INSTANA_TOKEN environment variable should be set to the Instana API token. Was a k8s secret created for this?")
 	}
 
 	if apiURL == "" {
-		panic("INSTANA_URL environment variable should be set to the Instana API end-point. Was a k8s secret created for this?")
+		log.Fatalln("INSTANA_URL environment variable should be set to the Instana API end-point. Was a k8s secret created for this?")
 	}
 
-	var api InfraQuery
-	api, err = NewClient(apiURL, apiToken)
+	to, err := instana.ToInstanaTS(toString)
 	if err != nil {
-		log.Fatalf("unable to create client: %v\n", err)
+		log.Fatalf("Invalid date time supplied for 'to': %v\n", err)
 	}
 
-	metrics, err := api.ListMetrics(queryString, pluginType, []string{metricName}, rollup, windowSize)
-	if err != nil {
-		log.Fatalf("error retrieving metrics: %v\n", err)
-	}
-
-	snapshots, err := api.ListSnapshots(queryString, pluginType, windowSize)
-	if err != nil {
-		log.Fatalf("error retrieving snapshots: %v\n", err)
-	}
-
-	log.Printf("Metrics:     %v\n", len(metrics))
-	log.Printf("Snapshots:   %v\n", len(snapshots))
+	Exec(apiToken, apiURL, metricName, pluginType, queryString, rollup, to, windowSize)
 }
 
 func writeCharts(metrics []openapi.MetricItem, metricName string) {
@@ -103,27 +121,6 @@ func writeCharts(metrics []openapi.MetricItem, metricName string) {
 	}
 }
 
-func newConfiguration(apiURL string, isInsecure bool) (*openapi.Configuration, error) {
-	u, err := url.Parse(apiURL)
-	if err != nil {
-		return nil, err
-	}
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			// ignore expired SSL certificates
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: isInsecure},
-		},
-	}
-
-	configuration := openapi.NewConfiguration()
-	configuration.BasePath = apiURL
-	configuration.Host = u.Hostname()
-	configuration.HTTPClient = httpClient
-
-	return configuration, nil
-}
-
 func rollupForWindow(windowSize int64) (int64, error) {
 	rollup := windowSize / 1000 / 600
 	if rollup <= 1 {
@@ -139,88 +136,6 @@ func rollupForWindow(windowSize int64) (int64, error) {
 	}
 
 	return 0, errors.New("rollup is too large for API call, maximum call size is 25 days")
-}
-
-// InfraQuery is a common interface for infrastructure queries.
-type InfraQuery interface {
-	ListMetrics(queryString string, pluginType string, metrics []string, rollup int64, windowSize int64) ([]openapi.MetricItem, error)
-	ListSnapshots(queryString string, pluginType string, windowSize int64) ([]openapi.SnapshotItem, error)
-}
-
-// NewClient builds an Instana API client from the specified URL and token.
-func NewClient(apiURL string, apiToken string) (InfraQuery, error) {
-	configuration, err := newConfiguration(apiURL, true)
-	if err != nil {
-		return nil, err
-	}
-
-	client := openapi.NewAPIClient(configuration)
-	ctx := context.WithValue(
-		context.Background(),
-		openapi.ContextAPIKey,
-		openapi.APIKey{
-			Key:    apiToken,
-			Prefix: "apiToken",
-		},
-	)
-
-	api := &InfraQueryAPI{
-		client: client,
-		ctx:    ctx,
-	}
-
-	return api, nil
-}
-
-// InfraQueryAPI is a concrete implementation fo the InfraQuery interface using the openapi client.
-type InfraQueryAPI struct {
-	client *openapi.APIClient
-	ctx    context.Context
-}
-
-// ListSnapshots returns the list of snapshots matching the supplied query parameters.
-func (api *InfraQueryAPI) ListSnapshots(queryString string, pluginType string, windowSize int64) ([]openapi.SnapshotItem, error) {
-	var snapshotsQuery = &openapi.GetSnapshotsOpts{
-		Query:      optional.NewString(queryString),
-		Plugin:     optional.NewString(pluginType),
-		WindowSize: optional.NewInt64(windowSize),
-	}
-	snapshotResp, httpResp, err := api.client.InfrastructureMetricsApi.GetSnapshots(api.ctx, snapshotsQuery)
-	if err != nil {
-		log.Fatalf("error in retrieving snapshots: %s\n", err.(openapi.GenericOpenAPIError).Body())
-	}
-
-	log.Printf("Remaining:   %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
-
-	return snapshotResp.Items, nil
-}
-
-// ListMetrics returns the list of metrics matching the supplied query parameters.
-func (api *InfraQueryAPI) ListMetrics(queryString string, pluginType string, metrics []string, rollup int64, windowSize int64) ([]openapi.MetricItem, error) {
-	var query = &openapi.GetInfrastructureMetricsOpts{
-		GetCombinedMetrics: optional.NewInterface(openapi.GetCombinedMetrics{
-			TimeFrame: openapi.TimeFrame{
-				WindowSize: windowSize,
-			},
-			Rollup:  int32(rollup),
-			Query:   queryString,
-			Plugin:  pluginType,
-			Metrics: metrics,
-		}),
-	}
-
-	metricsResp, httpResp, err := api.client.InfrastructureMetricsApi.GetInfrastructureMetrics(api.ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("error in retrieving metrics: %s", err.(openapi.GenericOpenAPIError).Body())
-	}
-
-	log.Printf("Remaining:   %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
-
-	if len(metricsResp.Items) < 1 {
-		return nil, errors.New("No metrics found")
-	}
-
-	return metricsResp.Items, nil
 }
 
 func renderChart(name string, lineChart *chart.Chart) error {
@@ -250,6 +165,7 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 		log.Printf("no metrics available: %s\n", item.Host)
 		return nil
 	}
+	fmt.Println("len =", metricsLen)
 	xValues := make([]float64, metricsLen)
 	yValues := make([]float64, metricsLen)
 
@@ -288,7 +204,7 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 			Name:           "time",
 			NameStyle:      chart.StyleShow(),
 			Style:          chart.StyleShow(),
-			ValueFormatter: func(v interface{}) string { return time.Unix(int64(v.(float64))/1000, 0).Format("15:04:05") },
+			ValueFormatter: func(v interface{}) string { return time.Unix(int64(v.(float64))/1000, 0).UTC().Format("15:04:05") },
 		},
 		YAxis: chart.YAxis{
 			Name:           metricName,
