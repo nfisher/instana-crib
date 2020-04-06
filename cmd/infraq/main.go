@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/antihax/optional"
 	"github.com/nfisher/instana-crib/pkg/instana/openapi"
@@ -62,8 +63,27 @@ func main() {
 	flag.Int64Var(&windowSize, "window", 3600, "metric window size in seconds")
 	flag.Parse()
 
+	rollup := windowSize / 1000 / 600
+	if rollup <= 1 {
+		rollup = 1
+	} else if rollup <= 5 {
+		rollup = 5
+	} else if rollup <= 60 {
+		rollup = 60
+	} else if rollup <= 300 {
+		rollup = 300
+	} else if rollup <= 3600 {
+		rollup = 3600
+	} else {
+		log.Fatal("Rollup is too large for this API call, maximum is 25 days (2,160,000,000)")
+	}
+
 	log.Printf("API Key Set: %v\n", apiToken != "")
 	log.Printf("API URL:     %v\n", apiURL)
+	log.Printf("Metric:      %v\n", metricName)
+	log.Printf("Query:       %v\n", queryString)
+	log.Printf("Rollup:      %v\n", rollup)
+	log.Printf("Window Size: %v\n", time.Duration(windowSize/1000)*time.Second)
 
 	if apiToken == "" {
 		panic("INSTANA_TOKEN environment variable should be set to the Instana API token. Was a k8s secret created for this?")
@@ -92,7 +112,7 @@ func main() {
 			TimeFrame: openapi.TimeFrame{
 				WindowSize: windowSize,
 			},
-			//Rollup:  1,
+			Rollup:  int32(rollup),
 			Query:   queryString,
 			Plugin:  pluginType,
 			Metrics: []string{metricName},
@@ -104,7 +124,7 @@ func main() {
 		log.Fatalf("error in retrieving metrics: %s\n", err.(openapi.GenericOpenAPIError).Body())
 	}
 
-	log.Printf("Rate Limit Remaining: %#v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
+	log.Printf("Limit Remaining: %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
 
 	if len(configResp.Items) < 1 {
 		log.Fatalln("No metrics found")
@@ -115,7 +135,7 @@ func main() {
 		if prefix == "" {
 			prefix = strings.Replace(item.Label, "/", "-", -1)
 		}
-		log.Printf("%s %v\n", prefix, item.Metrics[metricName])
+		//log.Printf("%s %v\n", prefix, item.Metrics[metricName])
 
 		lineChart := newChart(&item, metricName)
 		if lineChart == nil {
@@ -157,8 +177,8 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 		log.Printf("no metrics available: %s\n", item.Host)
 		return nil
 	}
-	xValues := make([]float64, metricsLen, metricsLen)
-	yValues := make([]float64, metricsLen, metricsLen)
+	xValues := make([]float64, metricsLen)
+	yValues := make([]float64, metricsLen)
 
 	var metric = item.Metrics[metricName]
 	var previous float64
@@ -179,7 +199,7 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 	}
 
 	title := item.Host
-	if "" == title {
+	if title == "" {
 		title = item.Label
 	}
 
@@ -197,9 +217,10 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 			Style:     chart.StyleShow(),
 		},
 		YAxis: chart.YAxis{
-			Name:      metricName,
-			NameStyle: chart.StyleShow(),
-			Style:     chart.StyleShow(),
+			Name:           metricName,
+			NameStyle:      chart.StyleShow(),
+			Style:          chart.StyleShow(),
+			ValueFormatter: func(v interface{}) string { return chart.FloatValueFormatterWithFormat(v, "%.4f") },
 		},
 		Width:  800,
 		Height: 494,
