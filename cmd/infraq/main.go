@@ -175,8 +175,8 @@ func newChart(item *openapi.MetricItem, metricName string) *chart.Chart {
 	var metric = item.Metrics[metricName]
 	var previous float64
 	for i, v := range metric {
-		var timestamp = v[SeriesTimestamp]
-		var value = v[SeriesValue]
+		var timestamp = float64(v[SeriesTimestamp])
+		var value = float64(v[SeriesValue])
 		if math.IsInf(value, 0) || math.IsNaN(value) {
 			value = 0.0
 		}

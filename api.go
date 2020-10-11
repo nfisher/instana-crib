@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
+	"sort"
 	"time"
 
 	"github.com/antihax/optional"
@@ -138,4 +140,48 @@ func ParseDuration(s string) (int64, error) {
 		return -1, err
 	}
 	return int64(duration / time.Millisecond), nil
+}
+
+const percentBuckets = 20
+
+type PercentageHeatmap map[string][percentBuckets]int
+
+const hoursMinutesSeconds = "15:04:05"
+
+func ToPercentageHeatmap(items []openapi.MetricItem, metric string) PercentageHeatmap {
+	var ph = make(PercentageHeatmap)
+	for _, item := range items {
+		ts := item.Metrics[metric]
+		for _, m := range ts {
+			t := time.Unix(int64(m[0]/1000), 0).UTC().Format(hoursMinutesSeconds)
+			v := int(math.Floor(m[1] * percentBuckets)) // scale to an index
+			if v > percentBuckets - 1 {
+				v = percentBuckets - 1
+			}
+			hist, ok := ph[t]
+			if !ok {
+				hist = [percentBuckets]int{}
+			}
+			hist[v]++
+			ph[t] = hist
+		}
+	}
+	return ph
+}
+
+func ToTabular(hist PercentageHeatmap) [][]string {
+	var tab = [][]string{{"group","variable","value"}}
+	var labels []string
+	for l := range hist {
+		labels = append(labels, l)
+	}
+	sort.Strings(labels)
+	for _, l := range labels {
+		for i, v := range hist[l] {
+			p := fmt.Sprintf("%d%%", i * 100 / percentBuckets)
+			s := fmt.Sprintf("%d", v)
+			tab = append(tab, []string{l, p, s})
+		}
+	}
+	return tab
 }
