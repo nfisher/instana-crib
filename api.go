@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/antihax/optional"
@@ -65,7 +66,13 @@ func (api *InfraQueryAPI) ListSnapshots(queryString string, pluginType string, w
 		log.Fatalf("error in retrieving snapshots: %s\n", err.(openapi.GenericOpenAPIError).Body())
 	}
 
-	log.Printf("Remaining:   %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
+	remaining, err := strconv.ParseInt(httpResp.Header.Get("X-Ratelimit-Remaining"), 10, 32)
+	if err != nil {
+		log.Println("unable to convert remaining rate limit")
+	}
+	if remaining < 25 && remaining % 5 == 0 {
+		log.Printf("warning minimal requests remaining: %v\n", remaining)
+	}
 
 	return snapshotResp.Items, nil
 }
@@ -87,13 +94,22 @@ func (api *InfraQueryAPI) ListMetrics(queryString string, pluginType string, met
 
 	metricsResp, httpResp, err := api.client.InfrastructureMetricsApi.GetInfrastructureMetrics(api.ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("error in retrieving metrics: %s", err.(openapi.GenericOpenAPIError).Body())
+		gerr, ok := err.(openapi.GenericOpenAPIError)
+		if !ok {
+			return nil, fmt.Errorf("error retrieving metrics: %v", err)
+		}
+		return nil, fmt.Errorf("error in retrieving metrics: %s", gerr.Body())
 	}
 
-	log.Printf("Remaining:   %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
-
+	remaining, err := strconv.ParseInt(httpResp.Header.Get("X-Ratelimit-Remaining"), 10, 32)
+	if err != nil {
+		log.Println("unable to convert remaining rate limit")
+	}
+	if remaining < 25 && remaining % 5 == 0 {
+		log.Printf("Warning Requests Remaining: %v\n", httpResp.Header.Get("X-Ratelimit-Remaining"))
+	}
 	if len(metricsResp.Items) < 1 {
-		return nil, errors.New("No metrics found")
+		return nil, errors.New("no metrics found")
 	}
 
 	return metricsResp.Items, nil
@@ -142,11 +158,34 @@ func ParseDuration(s string) (int64, error) {
 	return int64(duration / time.Millisecond), nil
 }
 
-const percentBuckets = 20
+const percentBuckets = 21
 
 type PercentageHeatmap map[string][percentBuckets]int
 
 const hoursMinutesSeconds = "15:04:05"
+
+func Sum(items []openapi.MetricItem, metric string) []float64 {
+	series := make(map[string]float64)
+	for _, item := range items {
+		ts := item.Metrics[metric]
+		for _, m := range ts {
+			t := time.Unix(int64(m[0]/1000), 0).UTC().Format(hoursMinutesSeconds)
+			v := series[t]
+			v += m[1]
+			series[t] = v
+		}
+	}
+	var keys []string
+	for k := range series {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	var ts []float64
+	for _, k := range keys {
+		ts = append(ts, series[k])
+	}
+	return ts
+}
 
 func ToPercentageHeatmap(items []openapi.MetricItem, metric string) PercentageHeatmap {
 	var ph = make(PercentageHeatmap)
@@ -155,6 +194,9 @@ func ToPercentageHeatmap(items []openapi.MetricItem, metric string) PercentageHe
 		for _, m := range ts {
 			t := time.Unix(int64(m[0]/1000), 0).UTC().Format(hoursMinutesSeconds)
 			v := int(math.Floor(m[1] * percentBuckets)) // scale to an index
+			if v == 0 && m[1] > 0 {
+				v = 1
+			}
 			if v > percentBuckets - 1 {
 				v = percentBuckets - 1
 			}
@@ -178,7 +220,12 @@ func ToTabular(hist PercentageHeatmap) [][]string {
 	sort.Strings(labels)
 	for _, l := range labels {
 		for i, v := range hist[l] {
-			p := fmt.Sprintf("%d%%", i * 100 / percentBuckets)
+			var p string
+			if i == 0 {
+				p = "0%"
+			} else {
+				p = fmt.Sprintf("%d%%", i * 100 / (percentBuckets -1))
+			}
 			s := fmt.Sprintf("%d", v)
 			tab = append(tab, []string{l, p, s})
 		}

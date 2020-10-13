@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans&display=swap" rel="stylesheet">
+    <title>Host Monitor</title>
+    <style>
+        html {
+            font-family: 'Work Sans', sans-serif;
+        }
+        h2 {
+            color: #777;
+            font-size: 1em;
+            margin-bottom: 0;
+            margin-top: 1.6em;
+            margin-right: 0.5em;
+        }
+        svg {
+            margin:0;
+            padding:0;
+            vertical-align: bottom;
+        }
+        /*
+        .row {
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .column {
+            box-sizing: border-box;
+            flex: 33%;
+        }
+        */
+        .column {
+            float: left;
+            width: 33.33%;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        @media screen and (max-width: 600px) {
+            .row {
+                flex-direction: column;
+            }
+        }
+        .left {
+            color: #ccc;
+            float:right;
+            margin-right:1.5em;
+        }
+        .digits {
+            display: inline-block;
+            width: 4em;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Filler Dropping (<span id="g_filler_dropping_count"></span> processes) <span class="left">99PCTL: <span id="sparkFiller99"></span> Max: <span id="sparkFillerMax"></span> <span id="sparkFiller"></span> Entities: <span id="sparkFillerLast" class="digits"></span></span></h2>
+<div id="g_filler_dropping"></div>
+
+<h2>AD Processor Dropping (<span id="g_ad_processor_dropping_count"></span> processes) <span class="left">99PCTL: <span id="sparkProcessor99"></span> Max: <span id="sparkProcessorMax"></span> <span id="sparkProcessor"></span> Spans: <span id="sparkProcessorLast" class="digits"></span></span></h2>
+<div id="g_ad_processor_dropping"></div>
+
+<h2>AD Writer Dropping (<span id="g_ad_writer_dropping_count"></span> processes) <span class="left">99PCTL: <span id="sparkWriter99"></span> Max: <span id="sparkWriterMax"></span> <span id="sparkWriter"></span> Spans: <span id="sparkWriterLast" class="digits"></span></span></h2>
+<div id="g_ad_writer_dropping"></div>
+
+<div class="row">
+    <div class="column">
+        <h2>CPU User (<span id="g_cpu_user_count"></span> hosts)</h2>
+        <div id="g_cpu_user"></div>
+    </div>
+    <div class="column">
+        <h2>CPU System (<span id="g_cpu_sys_count"></span> hosts)</h2>
+        <div id="g_cpu_sys"></div>
+    </div>
+    <div class="column">
+        <h2>CPU Wait (<span id="g_cpu_wait_count"></span> hosts)</h2>
+        <div id="g_cpu_wait"></div>
+    </div>
+</div>
+
+<!--
+<div class="row">
+    <div class="column">
+        <h2>CPU User (<span id="g_cpu_user_count"></span> hosts)</h2>
+        <div id="g_cpu_user"></div>
+    </div>
+    <div class="column">
+        <h2>CPU System (<span id="g_cpu_sys_count"></span> hosts)</h2>
+        <div id="g_cpu_sys"></div>
+    </div>
+    <div class="column">
+        <h2>CPU Wait (<span id="g_cpu_wait_count"></span> hosts)</h2>
+        <div id="g_cpu_wait"></div>
+    </div>
+</div>
+-->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js" integrity="sha512-RJJ1NNC88QhN7dwpCY8rm/6OxI+YdQP48DrLGe/eSAd+n+s1PXwQkkpzzAgoJe4cZFW2GALQoxox61gSY2yQfg==" crossorigin="anonymous"></script>
+<script src="heatmap.js?v=1"></script>
+
+</body>
+</html>

@@ -78,19 +78,38 @@ func cpuUser(startEpoch int64, values []float64) map[string][][]float64 {
 	return m
 }
 
+func Test_Sum_aligns_seconds(t *testing.T) {
+	input := []openapi.MetricItem{
+		{Metrics: cpuUser(1601553600, []float64{0.01, 0.01, 0.01})},
+		{Metrics: cpuUser(1601553601, []float64{0.01, 0.02})},
+	}
+	expected := []float64{0.01, 0.02, 0.03}
+
+	actual := instana.Sum(input, CpuUser)
+
+	if !cmp.Equal(actual, expected) {
+		t.Errorf("Sum() -got/+want:\n%s", cmp.Diff(expected, actual))
+	}
+}
+
+const percentBucketSize = 21
+
 func Test_ToPercentageHeatmap(t *testing.T) {
 	td := map[string]struct {
 		input []openapi.MetricItem
 		expected instana.PercentageHeatmap
 	}{
 		"multiple moments": {
-			[]openapi.MetricItem{{Metrics: cpuUser(1601553600, []float64{0.01, 0.01, 0.01})}},
-			instana.PercentageHeatmap{"12:00:00": [20]int{1}, "12:00:01": [20]int{1}, "12:00:02": [20]int{1}}},
+			[]openapi.MetricItem{{Metrics: cpuUser(1601553600, []float64{0, 0.01, 0.1})}},
+			instana.PercentageHeatmap{"12:00:00": [percentBucketSize]int{1}, "12:00:01": [percentBucketSize]int{0, 1}, "12:00:02": [percentBucketSize]int{0, 0, 1}}},
 		"multiple items": {
 			[]openapi.MetricItem{
 				{Metrics: cpuUser(1601553600, []float64{0.01, 0.01, 0.01})},
 				{Metrics: cpuUser(1601553600, []float64{0.1, 0.01, 1.0})}},
-			instana.PercentageHeatmap{"12:00:00": [20]int{1, 0, 1}, "12:00:01": [20]int{2}, "12:00:02": [20]int{1, 0,  0,  0,  0,  0,  0,  0,  0, 0, 0,  0,  0,  0,  0,  0,  0,  0, 0, 1}}},
+			instana.PercentageHeatmap{
+				"12:00:00": [percentBucketSize]int{0, 1, 1},
+				"12:00:01": [percentBucketSize]int{0, 2},
+				"12:00:02": [percentBucketSize]int{0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}}},
 	}
 
 	for name, tc := range td {
@@ -104,7 +123,7 @@ func Test_ToPercentageHeatmap(t *testing.T) {
 }
 
 func Test_ToTabular(t *testing.T) {
-	hist := instana.PercentageHeatmap{"12:00:00": [20]int{1, 1}, "12:00:01": [20]int{2}, "12:00:02": [20]int{1, 0,  0,  0,  0,  0,  0,  0,  0, 1}}
+	hist := instana.PercentageHeatmap{"12:00:00": [percentBucketSize]int{1, 1}, "12:00:01": [percentBucketSize]int{2}, "12:00:02": [percentBucketSize]int{1, 0,  0,  0,  0,  0,  0,  0,  0, 1}}
 	tab := instana.ToTabular(hist)
 	expected := [][]string{
 		{"group","variable","value"},
@@ -128,9 +147,10 @@ func Test_ToTabular(t *testing.T) {
 		{"12:00:00", "85%", "0"},
 		{"12:00:00", "90%", "0"},
 		{"12:00:00", "95%", "0"},
+		{"12:00:00", "100%", "0"},
 		{"12:00:01", "0%", "2"},
 	}
-	if !cmp.Equal(tab[:22], expected) {
+	if !cmp.Equal(tab[:23], expected) {
 		t.Errorf("-got/+want:\n%s", cmp.Diff(expected, tab[:22]))
 	}
 }
